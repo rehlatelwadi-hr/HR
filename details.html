@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الملف الموحد | رحلة الوادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; font-family: 'Cairo', sans-serif; padding: 20px; color: #1e293b; }
+        .master-card { background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; border: none; }
+        .sidebar-info { background: #0f172a; color: white; padding: 30px; }
+        .nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 10px; margin-bottom: 10px; border: 1px solid transparent; }
+        .nav-pills .nav-link.active { background: #3b82f6 !important; color: white; border-color: #3b82f6; }
+        .stat-box { background: #f8fafc; border-radius: 15px; padding: 15px; border: 1px solid #e2e8f0; }
+        .table thead { background: #1e293b; color: white; }
+        .approved-stamp { border: 2px solid #10b981; color: #10b981; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.7rem; display: inline-block; transform: rotate(-5deg); }
+        
+        /* التنسيق الاحترافي للطباعة */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .master-card { box-shadow: none; border: none; }
+            .sidebar-info { background: white !important; color: black !important; border-bottom: 2px solid #000; padding: 10px 0; }
+            .tab-pane { display: block !important; opacity: 1 !important; }
+            table { width: 100% !important; border: 1px solid #000 !important; }
+            th, td { border: 1px solid #000 !important; padding: 8px !important; font-size: 10pt !important; }
+            .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
+        }
+        .print-header { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid" style="max-width: 1300px;">
+    
+    <div class="print-header">
+        <h2>مؤسسة رحلة الوادي للشحن</h2>
+        <h4>كشف ملف موظف شامل</h4>
+        <hr>
+    </div>
+
+    <div class="row g-0 master-card shadow-lg">
+        <div class="col-md-3 sidebar-info no-print">
+            <div class="text-center mb-4">
+                <div class="bg-primary d-inline-block p-3 rounded-circle mb-3">
+                    <i class="fas fa-user-tie fa-3x text-white"></i>
+                </div>
+                <h4 id="sideName" class="fw-bold">--</h4>
+                <span id="sideUid" class="badge bg-secondary">--</span>
+            </div>
+            <hr class="border-secondary">
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+                <button class="nav-link active" onclick="switchTab('tab-bio')"><i class="fas fa-id-card me-2"></i> البيانات الوظيفية</button>
+                <button class="nav-link" onclick="switchTab('tab-finance')"><i class="fas fa-wallet me-2"></i> السجل المالي</button>
+                <button class="nav-link" onclick="switchTab('tab-leaves')"><i class="fas fa-plane-departure me-2"></i> الإجازات والوثائق</button>
+            </div>
+            <div class="mt-5 pt-5">
+                <button class="btn btn-outline-light w-100 rounded-pill mb-2" onclick="window.print()"><i class="fas fa-print me-2"></i> طباعة الملف</button>
+                <button class="btn btn-danger w-100 rounded-pill" onclick="window.location.href='archive.html'"><i class="fas fa-arrow-right me-2"></i> العودة للأرشيف</button>
+            </div>
+        </div>
+
+        <div class="col-md-9 p-4 p-md-5 bg-white">
+            
+            <div id="tab-bio" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-primary"><i class="fas fa-info-circle me-2"></i> بطاقة معلومات الموظف</h4>
+                    <button class="btn btn-warning btn-sm no-print" id="editBtn"><i class="fas fa-edit me-1"></i> تعديل البيانات</button>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="stat-box">
+                            <small class="text-muted">الاسم الكامل</small>
+                            <p class="fw-bold mb-0" id="bName">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <small class="text-muted">تاريخ الالتحاق</small>
+                            <p class="fw-bold mb-0" id="bJoin">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <small class="text-muted">حالة الكفالة</small>
+                            <p class="fw-bold mb-0" id="bSpons">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box border-primary">
+                            <small class="text-muted">رقم الإقامة</small>
+                            <p class="fw-bold mb-0" id="bIq">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box border-danger">
+                            <small class="text-muted">انتهاء الإقامة</small>
+                            <p class="fw-bold mb-0 text-danger" id="bIe">--</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box border-success">
+                            <small class="text-muted">الراتب الأساسي</small>
+                            <p class="fw-bold mb-0 text-success" id="bSal">-- ريال</p>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <h6 class="fw-bold mt-3">تفاصيل العقد الموثق:</h6>
+                        <table class="table table-sm table-bordered">
+                            <tr class="table-light">
+                                <th>رقم العقد</th><th>بداية العقد</th><th>نهاية العقد</th><th>الفرع</th>
+                            </tr>
+                            <tr>
+                                <td id="bCn">--</td><td id="bCs">--</td><td id="bCe">--</td><td id="bBr">--</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-finance" class="content-section" style="display:none">
+                <div class="d-flex justify-content-between mb-3">
+                    <h4 class="fw-bold text-success"><i class="fas fa-money-bill-wave me-2"></i> كشف الحساب المالي المعتمد</h4>
+                    <div class="text-end">
+                        <small class="text-muted d-block">الرصيد المتبقي (المديونية)</small>
+                        <h3 class="fw-bold text-danger" id="fBal">0.00</h3>
+                    </div>
+                </div>
+                <table class="table table-hover align-middle text-center border">
+                    <thead>
+                        <tr>
+                            <th>التاريخ والوقت</th><th>البيان</th><th>مدين (-)</th><th>دائن (+)</th><th>الرصيد</th><th>التعميد</th><th class="no-print">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lBody"></tbody>
+                </table>
+                <div class="bg-light p-4 mt-4 rounded-4 border no-print">
+                    <h6 class="fw-bold mb-3">إضافة حركة مالية جديدة (سلفة/سداد)</h6>
+                    <div class="row g-2">
+                        <div class="col-md-2"><select id="t" class="form-select border-0"><option value="d">سلفة (-)</option><option value="c">سداد (+)</option></select></div>
+                        <div class="col-md-2"><input type="number" id="amt" class="form-control border-0" placeholder="المبلغ"></div>
+                        <div class="col-md-5"><input type="text" id="note" class="form-control border-0" placeholder="ملاحظات الحركة.."></div>
+                        <div class="col-md-2"><input type="file" class="form-control border-0" onchange="encode(this)"></div>
+                        <div class="col-md-1"><button class="btn btn-success w-100" onclick="addT()">حفظ</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-leaves" class="content-section" style="display:none">
+                <h4 class="fw-bold text-info mb-4"><i class="fas fa-calendar-alt me-2"></i> سجل الإجازات والموافقات الورقية</h4>
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-info">
+                        <tr><th>من تاريخ</th><th>إلى تاريخ</th><th>النوع</th><th>المدة</th><th>الموافقة</th><th class="no-print">حذف</th></tr>
+                    </thead>
+                    <tbody id="lvBody"></tbody>
+                </table>
+                <div class="bg-info bg-opacity-10 p-4 mt-4 rounded-4 border border-info no-print">
+                    <h6 class="fw-bold mb-3 text-info">تسجيل إجازة مع رفع الموافقة الورقية</h6>
+                    <div class="row g-2">
+                        <div class="col-md-3"><input type="date" id="ls" class="form-control border-0"></div>
+                        <div class="col-md-3"><input type="date" id="le" class="form-control border-0"></div>
+                        <div class="col-md-3"><select id="lt" class="form-select border-0"><option>سنوية</option><option>مرضية</option><option>اضطرارية</option></select></div>
+                        <div class="col-md-2"><input type="file" class="form-control border-0" id="lfIn" onchange="encode(this)"></div>
+                        <div class="col-md-1"><button class="btn btn-info text-white w-100" onclick="addLv()">حفظ</button></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('wadi_db')), uid = new URLSearchParams(window.location.search).get('uid');
+    let e = db.emps.find(x => x.uid === uid), session = JSON.parse(localStorage.getItem('wadi_session')), fr = "";
+
+    function init() {
+        document.getElementById('sideName').innerText = e.name;
+        document.getElementById('sideUid').innerText = e.uid;
+        document.getElementById('bName').innerText = e.name;
+        document.getElementById('bJoin').innerText = e.joinDate || '--';
+        document.getElementById('bSpons').innerText = e.sponsorStatus || 'تحت الكفالة';
+        document.getElementById('bIq').innerText = e.iq || 'تحت النقل';
+        document.getElementById('bIe').innerText = e.ie || '--';
+        document.getElementById('bSal').innerText = e.sal + " ريال";
+        document.getElementById('bCn').innerText = e.cNo || '--';
+        document.getElementById('bCs').innerText = e.cStart || '--';
+        document.getElementById('bCe').innerText = e.cEnd || '--';
+        document.getElementById('bBr').innerText = e.br;
+        document.getElementById('editBtn').onclick = () => window.location.href = `edit_employee.html?uid=${e.uid}`;
+        render();
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function encode(i) { const r = new FileReader(); r.onload = () => fr = r.result; if(i.files[0]) r.readAsDataURL(i.files[0]); }
+
+    function render() {
+        let bal = 0;
+        document.getElementById('lBody').innerHTML = (e.ledger || []).map((x, i) => {
+            let d=0, c=0; if(x.type === 'd') { d=x.amt; bal+=parseFloat(x.amt); } else { c=x.amt; bal-=parseFloat(x.amt); }
+            return `<tr><td>${x.date}</td><td class="text-start">${x.note}</td><td class="text-danger">${d||'-'}</td><td class="text-success">${c||'-'}</td><td class="fw-bold">${bal}</td><td><span class="approved-stamp">عمد: ${x.auth}</span></td><td class="no-print"><i class="fas fa-trash text-danger pointer" onclick="delT(${i})"></i></td></tr>`;
+        }).join('');
+        document.getElementById('fBal').innerText = bal.toFixed(2) + " ريال";
+
+        document.getElementById('lvBody').innerHTML = (e.leaves || []).map((l, i) => {
+            const diff = Math.ceil((new Date(l.e) - new Date(l.s)) / (1000*60*60*24)) + 1;
+            return `<tr><td>${l.s}</td><td>${l.e}</td><td>${l.t}</td><td>${diff} يوم</td><td>${l.file ? `<a href="${l.file}" target="_blank" class="btn btn-sm btn-outline-dark">عرض</a>` : '❌'}</td><td class="no-print"><i class="fas fa-trash text-danger pointer" onclick="delLv(${i})"></i></td></tr>`;
+        }).join('');
+    }
+
+    function addT() {
+        const amt = document.getElementById('amt').value; if(!amt) return;
+        e.ledger.push({ date: new Date().toLocaleString('ar-SA'), type: document.getElementById('t').value, amt, note: document.getElementById('note').value, auth: session.name, att: fr });
+        save(); fr = ""; document.getElementById('amt').value = ''; render();
+    }
+
+    function addLv() {
+        if(!document.getElementById('ls').value) return;
+        if(!e.leaves) e.leaves = [];
+        e.leaves.push({ s: document.getElementById('ls').value, e: document.getElementById('le').value, t: document.getElementById('lt').value, file: fr });
+        save(); fr = ""; render();
+    }
+
+    function delT(i) { if(confirm("حذف العملية؟")) { e.ledger.splice(i, 1); save(); render(); } }
+    function delLv(i) { if(confirm("حذف الإجازة؟")) { e.leaves.splice(i, 1); save(); render(); } }
+    function save() { localStorage.setItem('wadi_db', JSON.stringify(db)); }
+    
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>دخول | رحلة الوادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0f172a; font-family: 'Cairo'; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { width: 400px; padding: 40px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border:none; }
+    </style>
+</head>
+<body>
+    <div class="card text-center shadow-lg">
+        <h3 class="fw-bold mb-4 text-primary text-nowrap">رحلة الوادي للشحن</h3>
+        <div class="text-start mb-3"><label class="small fw-bold">اسم المستخدم</label><input type="text" id="u" class="form-control" placeholder="admin"></div>
+        <div class="text-start mb-4"><label class="small fw-bold">كلمة المرور</label><input type="password" id="p" class="form-control" placeholder="123"></div>
+        <button onclick="auth()" class="btn btn-primary w-100 py-2 fw-bold rounded-pill shadow">دخول للنظام</button>
+        <p id="err" class="text-danger mt-3 small" style="display:none">⚠️ بيانات الدخول غير صحيحة</p>
+    </div>
+    <script>
+        if(!localStorage.getItem('wadi_db')) localStorage.setItem('wadi_db', JSON.stringify({ emps: [], brs: ["الرئيسي"], termEmps: [] }));
+        if(!localStorage.getItem('wadi_users')) localStorage.setItem('wadi_users', JSON.stringify([{u:'admin', p:'123', name:'سعيد الدوسري', role:'owner'}]));
+        function auth() {
+            const users = JSON.parse(localStorage.getItem('wadi_users'));
+            const u = document.getElementById('u').value, p = document.getElementById('p').value;
+            const user = users.find(x => x.u === u && x.p === p);
+            if(user) { localStorage.setItem('wadi_session', JSON.stringify(user)); window.location.href = 'dashboard.html'; }
+            else { document.getElementById('err').style.display='block'; }
+        }
+    </script>
+</body>
+</html>

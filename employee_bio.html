@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الملف الوظيفي | رحلة الوادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; font-family: 'Cairo'; padding: 40px; }
+        .bio-card { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .doc-img { width: 100%; max-width: 400px; border-radius: 10px; border: 5px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container bio-card">
+        <div class="d-flex justify-content-between border-bottom pb-4 mb-4">
+            <div>
+                <h2 class="fw-bold text-primary mb-1" id="n">--</h2>
+                <span class="badge bg-primary px-3 rounded-pill" id="uid">--</span>
+            </div>
+            <button class="btn btn-outline-dark no-print" onclick="window.location.href='archive.html'">🔙 العودة للسجل</button>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-info-circle me-2"></i> البيانات الشخصية والتعاقدية</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><b>رقم الإقامة:</b> <span id="iq">--</span></li>
+                    <li class="list-group-item"><b>تاريخ انتهاء الإقامة:</b> <span id="ie">--</span></li>
+                    <li class="list-group-item"><b>الفرع التابع له:</b> <span id="br">--</span></li>
+                    <li class="list-group-item"><b>الراتب الأساسي المعتمد:</b> <span id="sal">--</span> ريال</li>
+                </ul>
+            </div>
+            <div class="col-md-6 text-center border-start">
+                <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-file-contract me-2"></i> صورة العقد / الإقامة المرفقة</h5>
+                <div id="imgContainer">
+                    <p class="text-muted small">لا يوجد صورة مرفقة لهذا الموظف</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 no-print">
+            <button class="btn btn-dark px-5 py-2 fw-bold rounded-pill shadow" onclick="window.print()"><i class="fas fa-print me-2"></i> طباعة الملف الوظيفي</button>
+        </div>
+    </div>
+
+    <script>
+        const db = JSON.parse(localStorage.getItem('wadi_db')), uid = new URLSearchParams(window.location.search).get('uid');
+        const e = db.emps.find(x => x.uid === uid);
+        
+        document.getElementById('n').innerText = e.name;
+        document.getElementById('uid').innerText = e.uid;
+        document.getElementById('iq').innerText = e.iq;
+        document.getElementById('ie').innerText = e.ie;
+        document.getElementById('br').innerText = e.br;
+        document.getElementById('sal').innerText = e.sal;
+
+        if(e.file) {
+            document.getElementById('imgContainer').innerHTML = `<img src="${e.file}" class="doc-img" alt="وثيقة الموظف">`;
+        }
+    </script>
+</body>
+</html>

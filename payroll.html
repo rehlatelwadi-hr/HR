@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مسير الرواتب المعتمد | رحلة الوادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { background: #f0f2f5; font-family: 'Cairo'; display: flex; margin: 0; }
+        .sidebar { width: 260px; background: #0f172a; color: white; min-height: 100vh; position: fixed; right:0; top:0; z-index: 1000; }
+        .content { margin-right: 260px; padding: 30px; width: calc(100% - 260px); }
+        .nav-link { color: #94a3b8; padding: 12px 20px; border-radius: 10px; margin: 5px 15px; display: block; text-decoration: none; transition: 0.3s; }
+        .nav-link.active, .nav-link:hover { background: #3b82f6; color: white; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .input-table { width: 80px; border: 1px solid #dee2e6; border-radius: 6px; text-align: center; font-weight: bold; padding: 4px; background: #fff; }
+        .input-table:focus { border-color: #3b82f6; outline: none; background: #f0f7ff; }
+        .status-badge { font-size: 0.75rem; padding: 6px 15px; border-radius: 50px; }
+        .is-paid { background-color: #f0fdf4 !important; opacity: 0.8; }
+        @media print { .no-print { display: none !important; } .content { margin-right: 0; width: 100%; } }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar no-print">
+        <div class="text-center py-4 border-bottom border-secondary mb-3">
+            <h4 class="fw-bold text-white mb-0 text-nowrap">رحلة الوادي للشحن</h4>
+        </div>
+        <nav>
+            <a href="dashboard.html" class="nav-link"><i class="fas fa-chart-line me-2"></i> الإحصائيات</a>
+            <a href="archive.html" class="nav-link"><i class="fas fa-users-cog me-2"></i> سجل الموظفين</a>
+            <a href="payroll.html" class="nav-link active"><i class="fas fa-money-check-alt me-2"></i> مسير الرواتب</a>
+            <a href="settings.html" class="nav-link"><i class="fas fa-tools me-2"></i> الإعدادات</a>
+            <a href="login.html" class="nav-link text-danger mt-5"><i class="fas fa-sign-out-alt me-2"></i> خروج</a>
+        </nav>
+    </div>
+
+    <div class="content">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h3 class="fw-bold text-primary">المسيرات الرواتب الشهرية</h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success shadow-sm rounded-pill px-4" onclick="exportPayroll()">
+                    <i class="fas fa-file-excel me-1"></i> تصدير إكسل
+                </button>
+                <button class="btn btn-dark shadow-sm rounded-pill px-4" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> طباعة
+                </button>
+            </div>
+        </div>
+
+        <div class="card p-4 mb-4 no-print">
+            <div class="row g-3 align-items-end text-start">
+                <div class="col-md-3">
+                    <label class="small fw-bold mb-2">اختر الشهر</label>
+                    <select id="selM" class="form-select border-0 bg-light" onchange="renderPayroll()">
+                        <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+                        <option value="4" selected>أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+                        <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+                        <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold mb-2">اختر السنة</label>
+                    <select id="selY" class="form-select border-0 bg-light" onchange="renderPayroll()">
+                        <option>2026</option><option>2025</option><option>2024</option>
+                    </select>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="p-3 rounded-4 bg-primary bg-opacity-10">
+                        <small class="text-muted d-block">إجمالي مبالغ المسير لهذا الشهر</small>
+                        <h4 class="fw-bold text-primary mb-0" id="totalValue">0 ريال</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card overflow-hidden">
+            <table class="table table-hover align-middle mb-0 text-center" id="payrollTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4 text-start">الموظف</th>
+                        <th>الأساسي</th>
+                        <th>غياب (أيام)</th>
+                        <th>إضافي (+)</th>
+                        <th>إكرامية (+)</th>
+                        <th>مديونية (-)</th>
+                        <th class="bg-primary">الصافي</th>
+                        <th>الحالة</th>
+                        <th class="no-print">إجراء الترحيل</th>
+                    </tr>
+                </thead>
+                <tbody id="pBody" class="bg-white"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('wadi_db'));
+        const session = JSON.parse(localStorage.getItem('wadi_session'));
+
+        function renderPayroll() {
+            const m = document.getElementById('selM').value;
+            const y = document.getElementById('selY').value;
+            const monthID = `${y}-${m}`;
+            const body = document.getElementById('pBody');
+
+            body.innerHTML = db.emps.map((e, index) => {
+                // استعادة البيانات المسجلة لهذا الشهر بعينه من سجل الموظف
+                if (!e.monthly_records) e.monthly_records = {};
+                const record = e.monthly_records[monthID] || { abs: 0, ot: 0, bn: 0, paid: false };
+                
+                // حساب مديونية الموظف الحالية (السلف)
+                let debt = (e.ledger || []).reduce((acc, x) => acc + (x.type === 'd' ? parseFloat(x.amt) : -parseFloat(x.amt)), 0);
+                
+                return `
+                <tr id="row-${index}" class="${record.paid ? 'is-paid' : ''}">
+                    <td class="ps-4 text-start">
+                        <div class="fw-bold text-dark">${e.name}</div>
+                        <small class="text-muted">${e.br}</small>
+                    </td>
+                    <td class="base-sal">${e.sal}</td>
+                    <td><input type="number" class="input-table abs" value="${record.abs}" ${record.paid ? 'disabled' : ''} onchange="saveMonthData(${index})"></td>
+                    <td><input type="number" class="input-table ot" value="${record.ot}" ${record.paid ? 'disabled' : ''} onchange="saveMonthData(${index})"></td>
+                    <td><input type="number" class="input-table bn" value="${record.bn}" ${record.paid ? 'disabled' : ''} onchange="saveMonthData(${index})"></td>
+                    <td class="text-danger fw-bold">${debt}</td>
+                    <td class="fw-bold text-primary net-val">0</td>
+                    <td>
+                        <span class="badge status-badge ${record.paid ? 'bg-success' : 'bg-warning text-dark'} shadow-sm">
+                            ${record.paid ? '<i class="fas fa-check-circle me-1"></i> معتمد ومرحل' : '<i class="fas fa-edit me-1"></i> تحت الإعداد'}
+                        </span>
+                    </td>
+                    <td class="no-print">
+                        ${record.paid ? 
+                            `<button class="btn btn-sm btn-light border disabled px-3">مغلق</button>` : 
+                            `<button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" onclick="disburse(${index})">اعتماد وصرف</button>`
+                        }
+                    </td>
+                </tr>`;
+            }).join('');
+            
+            db.emps.forEach((_, i) => calc(i));
+        }
+
+        // حفظ البيانات المدخلة (غياب، إضافي..) فور تغييرها وربطها بالشهر
+        function saveMonthData(i) {
+            const m = document.getElementById('selM').value;
+            const y = document.getElementById('selY').value;
+            const monthID = `${y}-${m}`;
+            const row = document.getElementById(`row-${i}`);
+            
+            if (!db.emps[i].monthly_records) db.emps[i].monthly_records = {};
+            
+            db.emps[i].monthly_records[monthID] = {
+                abs: parseFloat(row.querySelector('.abs').value) || 0,
+                ot: parseFloat(row.querySelector('.ot').value) || 0,
+                bn: parseFloat(row.querySelector('.bn').value) || 0,
+                paid: db.emps[i].monthly_records[monthID]?.paid || false
+            };
+
+            localStorage.setItem('wadi_db', JSON.stringify(db));
+            calc(i); // إعادة حساب الصافي فوراً
+        }
+
+        function calc(i) {
+            const row = document.getElementById(`row-${i}`);
+            const base = parseFloat(row.querySelector('.base-sal').innerText);
+            const abs = parseFloat(row.querySelector('.abs').value) || 0;
+            const ot = parseFloat(row.querySelector('.ot').value) || 0;
+            const bn = parseFloat(row.querySelector('.bn').value) || 0;
+            const debt = parseFloat(row.cells[5].innerText);
+
+            const absDed = (base / 30) * abs;
+            const net = (base - absDed + ot + bn) - debt;
+
+            row.querySelector('.net-val').innerText = net.toFixed(2);
+            updateTotal();
+        }
+
+        function disburse(i) {
+            const m = document.getElementById('selM').value;
+            const y = document.getElementById('selY').value;
+            const mText = document.getElementById('selM').options[document.getElementById('selM').selectedIndex].text;
+            const monthID = `${y}-${m}`;
+            const row = document.getElementById(`row-${i}`);
+            const net = parseFloat(row.querySelector('.net-val').innerText);
+            const emp = db.emps[i];
+
+            if(confirm(`تأكيد صرف راتب شهر ${mText} للموظف ${emp.name} بمبلغ ${net} ريال؟ سيتم إغلاق الشهر وترحيل العملية للمالية.`)) {
+                
+                const timestamp = new Date().toLocaleString('ar-SA');
+                
+                // 1. الترحيل لكشف الحساب
+                if(!emp.ledger) emp.ledger = [];
+                emp.ledger.push({
+                    date: timestamp,
+                    note: `اعتماد راتب شهر ${mText} لعام ${y}`,
+                    type: 'c', // تصفية مديونية
+                    amt: net,
+                    auth: session.name
+                });
+
+                // 2. تغيير حالة الشهر إلى "مدفوع/مرحل"
+                emp.monthly_records[monthID].paid = true;
+
+                localStorage.setItem('wadi_db', JSON.stringify(db));
+                renderPayroll();
+            }
+        }
+
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll('.net-val').forEach(el => total += parseFloat(el.innerText));
+            document.getElementById('totalValue').innerText = total.toFixed(2) + " ريال";
+        }
+
+        function exportPayroll() {
+            const table = document.getElementById("payrollTable");
+            const wb = XLSX.utils.table_to_book(table, { sheet: "مسير الرواتب", raw: true });
+            XLSX.writeFile(wb, `Wadi_Payroll_${document.getElementById('selM').value}.xlsx`);
+        }
+
+        renderPayroll();
+    </script>
+</body>
+</html>

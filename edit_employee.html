@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تعديل بيانات | رحلة الوادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light p-5">
+    <div class="container bg-white p-5 rounded-4 shadow-sm">
+        <h3 class="fw-bold text-warning mb-4 border-bottom pb-2">تحديث بيانات الموظف</h3>
+        <div id="formBody" class="row g-4"></div>
+        <div class="mt-5 border-top pt-4 text-center">
+            <button class="btn btn-warning px-5 rounded-pill shadow" onclick="update()">حفظ التعديلات</button>
+            <button class="btn btn-danger ms-3 px-5 rounded-pill shadow" onclick="del()">حذف الموظف نهائياً</button>
+            <button class="btn btn-light ms-2 px-5" onclick="window.location.href='archive.html'">إلغاء</button>
+        </div>
+    </div>
+    <script>
+        let db = JSON.parse(localStorage.getItem('wadi_db')), uid = new URLSearchParams(window.location.search).get('uid');
+        let e = db.emps.find(x => x.uid === uid);
+        
+        document.getElementById('formBody').innerHTML = `
+            <div class="col-md-6"><label>الاسم</label><input id="en" class="form-control" value="${e.name}"></div>
+            <div class="col-md-3"><label>الفرع</label><select id="eb" class="form-select">${db.brs.map(b=>`<option ${e.br===b?'selected':''}>${b}</option>`).join('')}</select></div>
+            <div class="col-md-3"><label>الحالة</label><select id="ess" class="form-select"><option ${e.sponsorStatus==='تحت الكفالة'?'selected':''}>تحت الكفالة</option><option ${e.sponsorStatus==='تحت إجراء النقل'?'selected':''}>تحت إجراء النقل</option></select></div>
+            <div class="col-md-4"><label>تاريخ الالتحاق</label><input id="ejd" type="date" class="form-control" value="${e.joinDate}"></div>
+            <div class="col-md-4"><label>رقم الإقامة</label><input id="eiq" class="form-control" value="${e.iq}"></div>
+            <div class="col-md-4"><label>انتهاء الإقامة</label><input id="eie" type="date" class="form-control" value="${e.ie}"></div>
+            <div class="col-md-4"><label>رقم العقد</label><input id="ecn" class="form-control" value="${e.cNo||''}"></div>
+            <div class="col-md-4"><label>بداية العقد</label><input id="ecs" type="date" class="form-control" value="${e.cStart||''}"></div>
+            <div class="col-md-4"><label>نهاية العقد</label><input id="ece" type="date" class="form-control" value="${e.cEnd||''}"></div>
+            <div class="col-md-4"><label>الراتب الأساسي</label><input id="esal" type="number" class="form-control" value="${e.sal}"></div>`;
+
+        function update() {
+            e.name = document.getElementById('en').value; e.br = document.getElementById('eb').value;
+            e.sponsorStatus = document.getElementById('ess').value; e.joinDate = document.getElementById('ejd').value;
+            e.iq = document.getElementById('eiq').value; e.ie = document.getElementById('eie').value;
+            e.cNo = document.getElementById('ecn').value; e.cStart = document.getElementById('ecs').value;
+            e.cEnd = document.getElementById('ece').value; e.sal = document.getElementById('esal').value;
+            localStorage.setItem('wadi_db', JSON.stringify(db)); alert("تم التحديث بنجاح!"); window.location.href='archive.html';
+        }
+        function del() {
+            if(confirm("تحذير: سيتم حذف الموظف وكافة سجلاته المالية نهائياً! هل تريد الاستمرار؟")) {
+                db.emps = db.emps.filter(x => x.uid !== uid);
+                localStorage.setItem('wadi_db', JSON.stringify(db)); window.location.href='archive.html';
+            }
+        }
+    </script>
+</body>
+</html>

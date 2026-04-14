@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إضافة موظف | رحلة الوادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #f8fafc; font-family: 'Cairo'; padding: 40px; }
+        .req { color: red; font-weight: bold; }
+        .container { max-width: 950px; }
+    </style>
+</head>
+<body>
+    <div class="container bg-white p-5 rounded-4 shadow-sm">
+        <h3 class="fw-bold text-primary mb-4 border-bottom pb-2">فتح ملف موظف جديد</h3>
+        <form id="fEmp" class="row g-4">
+            <div class="col-md-6"><label>الاسم الرباعي <span class="req">*</span></label><input type="text" id="n" class="form-control" required></div>
+            <div class="col-md-3"><label>الفرع <span class="req">*</span></label><select id="br" class="form-select" required></select></div>
+            <div class="col-md-3">
+                <label>حالة الكفالة <span class="req">*</span></label>
+                <select id="ss" class="form-select" onchange="toggleReq()" required>
+                    <option value="تحت الكفالة">تحت الكفالة</option>
+                    <option value="تحت إجراء النقل">تحت إجراء النقل</option>
+                </select>
+            </div>
+
+            <div class="col-md-4"><label>تاريخ الالتحاق بالعمل <span class="req">*</span></label><input type="date" id="jd" class="form-control" required></div>
+            <div class="col-md-4"><label>رقم الإقامة <span class="req iq-req">*</span></label><input type="text" id="iq" class="form-control iq-field" required></div>
+            <div class="col-md-4"><label>انتهاء الإقامة <span class="req iq-req">*</span></label><input type="date" id="ie" class="form-control iq-field" required></div>
+            
+            <div class="col-md-4"><label>رقم العقد <span class="req iq-req">*</span></label><input type="text" id="cn" class="form-control iq-field" required></div>
+            <div class="col-md-4"><label>بداية العقد <span class="req iq-req">*</span></label><input type="date" id="cs" class="form-control iq-field" required></div>
+            <div class="col-md-4"><label>نهاية العقد <span class="req iq-req">*</span></label><input type="date" id="ce" class="form-control iq-field" required></div>
+
+            <div class="col-md-4"><label>الراتب الأساسي <span class="req">*</span></label><input type="number" id="sal" class="form-control" required></div>
+            <div class="col-md-8"><label>صورة العقد / الإقامة (اختياري)</label><input type="file" class="form-control" onchange="encode(this)"></div>
+
+            <div class="col-12 mt-4 text-center border-top pt-4">
+                <button type="button" onclick="save()" class="btn btn-primary px-5 btn-lg rounded-pill shadow">حفظ البيانات والتوثيق</button>
+                <button type="button" onclick="window.location.href='archive.html'" class="btn btn-light ms-2 rounded-pill px-4">إلغاء</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // التأكد من وجود قاعدة البيانات قبل البدء
+        let db = JSON.parse(localStorage.getItem('wadi_db')) || { emps: [], brs: ["الرئيسي"], termEmps: [] };
+        
+        // تحديث قائمة الفروع
+        const branchSelect = document.getElementById('br');
+        branchSelect.innerHTML = db.brs.map(b => `<option value="${b}">${b}</option>`).join('');
+
+        let fr = "";
+        function encode(i) {
+            const r = new FileReader();
+            r.onload = () => fr = r.result;
+            if(i.files[0]) r.readAsDataURL(i.files[0]);
+        }
+
+        function toggleReq() {
+            const isTransfer = document.getElementById('ss').value === 'تحت إجراء النقل';
+            document.querySelectorAll('.iq-field').forEach(el => {
+                el.required = !isTransfer;
+                if(isTransfer) el.value = ""; // مسح القيم إذا كان تحت النقل
+            });
+            document.querySelectorAll('.iq-req').forEach(el => el.style.display = isTransfer ? 'none' : 'inline');
+        }
+
+        function save() {
+            // جلب القيم من الحقول
+            const name = document.getElementById('n').value.trim();
+            const branch = document.getElementById('br').value;
+            const sponsorStatus = document.getElementById('ss').value;
+            const joinDate = document.getElementById('jd').value;
+            const iqama = document.getElementById('iq').value;
+            const salary = document.getElementById('sal').value;
+
+            // التحقق الأساسي
+            if(!name || !joinDate || !salary) {
+                alert("برجاء ملء جميع الحقول التي تحمل علامة (*)");
+                return;
+            }
+
+            // بناء كائن الموظف الجديد
+            const newEmp = { 
+                uid: "WDI-" + Date.now(), // معرف فريد جداً
+                name: name, 
+                br: branch, 
+                sponsorStatus: sponsorStatus,
+                joinDate: joinDate,
+                iq: iqama || "تحت النقل", 
+                ie: document.getElementById('ie').value || "", 
+                cNo: document.getElementById('cn').value || "",
+                cStart: document.getElementById('cs').value || "",
+                cEnd: document.getElementById('ce').value || "",
+                sal: parseFloat(salary), 
+                file: fr, 
+                ledger: [], // سجل مالي فارغ
+                leaves: []  // سجل إجازات فارغ
+            };
+
+            try {
+                // دفع البيانات للقاعدة
+                db.emps.push(newEmp);
+                // الحفظ الفعلي في ذاكرة المتصفح
+                localStorage.setItem('wadi_db', JSON.stringify(db));
+                
+                alert("تم حفظ الموظف بنجاح في قاعدة البيانات!");
+                window.location.href = 'archive.html';
+            } catch (error) {
+                console.error("خطأ في الحفظ:", error);
+                alert("حدث خطأ أثناء الحفظ، قد تكون الصورة المرفقة كبيرة جداً.");
+            }
+        }
+    </script>
+</body>
+</html>
